@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>simplex noise - loneli</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="simplex noise"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  </head>
+  <body>
+    <canvas id="output" width="480" height="360"></canvas>
+    <p>source: <a href="https://scratch.mit.edu/projects/2516786/">this nice project</a></p>
+    <script type="text/javascript">
+      var start=new Date().getTime();
+      var canvas=document.querySelector('#output'),
+      c=canvas.getContext('2d'),
+      adjust_colours=1,
+      gradient_a=[1,1,0,-1,-1,-1,0,1],
+      gradient_b=[0,1,1,1,0,-1,-1,-1],
+      table_size=256,
+      skew=(Math.sqrt(2+1)-1)/2,
+      unskew=(2+1-Math.sqrt(2+1))/(2*(2+1)),
+      one_minus_unskew_times_two=1-unskew*2,
+      gradient_size=gradient_a.length,
+      table=[];
+      for (var i=0;i<table_size;i++) table.push(Math.floor(Math.random()*table_size));
+      for (var i=0;i<table_size;i++) table.push(table[i]);
+      for (var i=0;i<480;i++) for (var j=0;j<360;j++) {
+        var x=i/100,
+        y=j/100,
+        mu=(x+y)*skew,
+        a=x+mu;
+        a=a-a%1;
+        var b=y+mu;
+        b=b-b%1,
+        mu=(a+b)*unskew;
+        var offset_a=x-(a-mu),
+        offset_b=y-(b-mu),
+        transversal_a=offset_a>offset_b?1:0,
+        transversal_b=offset_a>offset_b?0:1,
+        wrapped_a=a%table_size+1,
+        wrapped_b=b%table_size+1,
+        v=0.5-(offset_a*offset_a+offset_b*offset_b),
+        grad_a,grad_b,value;
+        if (v>0)
+          index=table[wrapped_a+table[wrapped_b-1]-1]%gradient_size+1,
+          grad_a=gradient_a[index-1],
+          grad_b=gradient_b[index-1],
+          v=v*v,
+          value=v*v*(offset_a*grad_a+offset_b*grad_b);
+        else value=0;
+        var vertex_a=offset_a-(transversal_a-unskew),
+        vertex_b=offset_b-(transversal_b-unskew);
+        v=0.5-(vertex_a*vertex_a+vertex_b*vertex_b);
+        if (v>0)
+          index=table[wrapped_a+transversal_a+table[wrapped_b+transversal_b-1]-1]%gradient_size+1,
+          grad_a=gradient_a[index-1],
+          grad_b=gradient_b[index-1],
+          v=v*v,
+          value+=v*v*(vertex_a*grad_a+vertex_b*grad_b);
+        vertex_a=offset_a-one_minus_unskew_times_two,
+        vertex_b=offset_b-one_minus_unskew_times_two,
+        v=0.5-(vertex_a*vertex_a+vertex_b*vertex_b);
+        if (v>0)
+          index=table[wrapped_a+table[wrapped_b]]%gradient_size+1,
+          grad_a=gradient_a[index-1],
+          grad_b=gradient_b[index-1],
+          v=v*v,
+          value+=v*v*(vertex_a*grad_a+vertex_b*grad_b);
+        value*=65;
+        var colour=(value+1)/2;
+        if (adjust_colours===1) colour=colour*colour;
+        c.fillStyle=`hsl(202,100%,${colour*100}%)`;
+        // c.fillStyle=colour<0.3?'#80c460':'#4d9de8';
+        c.fillRect(i,j,1,1);
+      }
+      console.log(new Date().getTime()-start);
+    </script>
+  </body>
+</html>
